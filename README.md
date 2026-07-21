@@ -15,7 +15,7 @@ Rein gives a Nigerian business one operating view for customer collections, supp
 - Strict Zod boundary that rejects and audits attempted policy override fields
 - MCP tools: `collect.create_virtual_account`, `payout.initiate`, `verify.customer`, `wallet.balance`, `policy.explain`, and `agent.whoami`
 - Human approval execution that repeats name inquiry before releasing a held payout
-- Raw-body HMAC-SHA256 verification for Monnify collection webhooks
+- Raw-body HMAC-SHA512 verification for Monnify collection webhooks
 - Scripted offline demo and optional Anthropic-powered agent loop
 
 ## Architecture

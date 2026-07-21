@@ -46,9 +46,11 @@ export function verifyMonnifySignature(
   secret: string,
 ): boolean {
   if (!signature || !secret) return false;
-  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
+  // Monnify signs the raw request body with HMAC-SHA512 keyed on the client
+  // secret and sends it hex-encoded (128 chars) in the `monnify-signature` header.
+  const expected = createHmac("sha512", secret).update(rawBody).digest("hex");
   const supplied = signature.trim().toLowerCase();
-  if (!/^[a-f0-9]{64}$/.test(supplied)) return false;
+  if (!/^[a-f0-9]{128}$/.test(supplied)) return false;
   return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(supplied, "hex"));
 }
 

@@ -7,14 +7,23 @@ import {
 } from "../src/webhooks/monnify.js";
 
 describe("Monnify webhook boundary", () => {
-  it("verifies the raw body with HMAC-SHA256", () => {
+  it("verifies the raw body with HMAC-SHA512", () => {
     const body = Buffer.from('{"eventType":"SUCCESSFUL_TRANSACTION"}');
     const secret = "webhook-test-secret";
-    const signature = createHmac("sha256", secret)
+    const signature = createHmac("sha512", secret)
       .update(body)
       .digest("hex");
     expect(verifyMonnifySignature(body, signature, secret)).toBe(true);
-    expect(verifyMonnifySignature(body, "0".repeat(64), secret)).toBe(false);
+    // Wrong signature of the right length is rejected.
+    expect(verifyMonnifySignature(body, "0".repeat(128), secret)).toBe(false);
+    // A SHA-256-length signature is rejected outright.
+    expect(
+      verifyMonnifySignature(
+        body,
+        createHmac("sha256", secret).update(body).digest("hex"),
+        secret,
+      ),
+    ).toBe(false);
   });
 
   it("converts decimal naira to integer kobo", () => {
