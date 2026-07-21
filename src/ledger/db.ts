@@ -416,23 +416,79 @@ export class Ledger {
       });
   }
 
+  /**
+   * Atomically claim a pending approval before any provider call.
+   * Returns the stored outcome if this caller won the race; undefined if lost.
+   */
+  claimApproval(idempotencyKey: string): StoredOutcome | undefined {
+    return this.db.transaction(() => {
+      const row = this.db
+        .prepare(
+          "SELECT status, outcome_json FROM idempotency WHERE idempotency_key = ?",
+        )
+        .get(idempotencyKey) as
+        | { status: string; outcome_json: string | null }
+        | undefined;
+      if (!row?.outcome_json || row.status !== "PENDING_APPROVAL") {
+        return undefined;
+      }
+      const existing = JSON.parse(row.outcome_json) as StoredOutcome;
+      const claimed = this.db
+        .prepare(
+          `UPDATE executions
+           SET status = 'APPROVAL_IN_FLIGHT'
+           WHERE idempotency_key = ? AND status = 'PENDING_APPROVAL'`,
+        )
+        .run(idempotencyKey);
+      if (claimed.changes === 0) return undefined;
+
+      const inFlight: StoredOutcome = {
+        ...existing,
+        status: "APPROVAL_IN_FLIGHT",
+      };
+      this.db
+        .prepare(
+          `UPDATE idempotency
+           SET status = 'APPROVAL_IN_FLIGHT', outcome_json = ?
+           WHERE idempotency_key = ?`,
+        )
+        .run(JSON.stringify(inFlight), idempotencyKey);
+      return inFlight;
+    })();
+  }
+
   updateApprovalOutcome(
     idempotencyKey: string,
     status: "SUCCESS" | "DENIED" | "PROVIDER_ERROR",
     result?: unknown,
     providerReference?: string,
   ): StoredOutcome {
-    const existing = this.getOutcome(idempotencyKey);
-    if (!existing?.decision || existing.status !== "PENDING_APPROVAL") {
-      throw new Error("Approval is not pending");
-    }
-    const outcome: StoredOutcome = { ...existing, status, result };
     const transaction = this.db.transaction(() => {
-      this.db
+      const row = this.db
+        .prepare(
+          "SELECT status, outcome_json FROM idempotency WHERE idempotency_key = ?",
+        )
+        .get(idempotencyKey) as
+        | { status: string; outcome_json: string | null }
+        | undefined;
+      if (
+        !row?.outcome_json ||
+        (row.status !== "PENDING_APPROVAL" &&
+          row.status !== "APPROVAL_IN_FLIGHT")
+      ) {
+        throw new Error("Approval is not pending");
+      }
+      const existing = JSON.parse(row.outcome_json) as StoredOutcome;
+      if (!existing.decision) {
+        throw new Error("Approval is not pending");
+      }
+
+      const claimed = this.db
         .prepare(
           `UPDATE executions
            SET status = ?, provider_reference = ?, result_json = ?
-           WHERE idempotency_key = ?`,
+           WHERE idempotency_key = ?
+             AND status IN ('PENDING_APPROVAL', 'APPROVAL_IN_FLIGHT')`,
         )
         .run(
           status,
@@ -440,6 +496,11 @@ export class Ledger {
           result === undefined ? null : JSON.stringify(result),
           idempotencyKey,
         );
+      if (claimed.changes === 0) {
+        throw new Error("Approval is not pending");
+      }
+
+      const outcome: StoredOutcome = { ...existing, status, result };
       this.db
         .prepare(
           `UPDATE idempotency
@@ -447,9 +508,9 @@ export class Ledger {
            WHERE idempotency_key = ?`,
         )
         .run(status, JSON.stringify(outcome), idempotencyKey);
+      return outcome;
     });
-    transaction();
-    return outcome;
+    return transaction();
   }
 
   close(): void {

@@ -1,9 +1,5 @@
 import { ZodError } from "zod";
-import {
-  fullAccessPrincipal,
-  type AgentPrincipal,
-  type Capability,
-} from "./agent/registry.js";
+import type { AgentPrincipal, Capability } from "./agent/registry.js";
 import { appendAudit } from "./ledger/audit.js";
 import {
   Ledger,
@@ -66,12 +62,9 @@ export class ReinService {
     private readonly ledger: Ledger,
     private readonly monnify: MonnifyClient,
     private readonly policy: Policy,
-    principal: string | AgentPrincipal,
+    principal: AgentPrincipal,
   ) {
-    this.principal =
-      typeof principal === "string"
-        ? fullAccessPrincipal(principal)
-        : principal;
+    this.principal = principal;
     this.agentId = this.principal.agentId;
   }
 
@@ -505,15 +498,14 @@ export class ReinService {
   }
 
   async approvePayout(idempotencyKey: string): Promise<StoredOutcome> {
-    const pending = this.ledger.getOutcome(idempotencyKey);
+    const claimed = this.ledger.claimApproval(idempotencyKey);
     if (
-      !pending?.decision ||
-      pending.status !== "PENDING_APPROVAL" ||
-      pending.intent.action !== "PAYOUT"
+      !claimed?.decision ||
+      claimed.intent.action !== "PAYOUT"
     ) {
       throw new Error("Payout approval is not pending");
     }
-    const intent = pending.intent;
+    const intent = claimed.intent;
     const inquiry = await this.monnify.nameInquiry(
       intent.beneficiaryAccount!,
       intent.beneficiaryBankCode!,
@@ -567,6 +559,10 @@ export class ReinService {
   }
 
   denyPayout(idempotencyKey: string): StoredOutcome {
+    const claimed = this.ledger.claimApproval(idempotencyKey);
+    if (!claimed) {
+      throw new Error("Approval is not pending");
+    }
     const outcome = this.ledger.updateApprovalOutcome(
       idempotencyKey,
       "DENIED",

@@ -24,6 +24,7 @@ export function ApprovalsPage() {
     try {
       await api(`/api/approvals/${encodeURIComponent(idempotencyKey)}/${action}`, {
         method: "POST",
+        auth: "approver",
       });
       await approvals.refresh();
     } catch (error) {

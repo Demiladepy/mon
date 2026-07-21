@@ -130,6 +130,10 @@ Use sandbox credentials only. Rein converts integer kobo to Monnify's naira requ
 ## Security model
 
 - Agents are principals with least-privilege capabilities; an action the principal lacks is denied before any intent is claimed.
+- Unknown agent ids are **fail-closed** — MCP/HTTP refuse to start (or reject the request) rather than inventing a full-access principal.
+- Agent identity is authenticated by shared secret (`AGENT_TOKEN` / `AGENT_TOKENS`). The bearer token maps to a principal; clients cannot assert an agent id independently of the credential.
+- Human approve/deny requires `APPROVER_TOKEN` (`Authorization: Bearer …` or `X-Rein-Approver-Token`). Agent tokens cannot approve.
+- Approval release uses an atomic claim (`PENDING_APPROVAL` → `APPROVAL_IN_FLIGHT`) before any Monnify call, so concurrent approvers cannot double-send.
 - A per-agent grant can only narrow the global policy. The engine intersects the two and takes the tighter ceiling, so a grant can never escalate authority.
 - Tool arguments are untrusted. Strict Zod schemas reject unknown fields such as `adminOverride` or `maxPerTxnKobo`.
 - Policy is server-side and cannot be changed by a tool call.

@@ -25,6 +25,22 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().default(""),
   ANTHROPIC_MODEL: z.string().default("claude-sonnet-4-20250514"),
   AGENT_ID: z.string().default("demo-ops-agent"),
+  /**
+   * Shared secret for the process-bound agent (MCP / default HTTP principal).
+   * Must match the entry for AGENT_ID inside AGENT_TOKENS.
+   */
+  AGENT_TOKEN: z.string().default("rein-demo-ops-token"),
+  /**
+   * Comma-separated `agentId:token` pairs (or a JSON object). Tokens are the
+   * only way to assume a principal — unknown agents get no standing.
+   */
+  AGENT_TOKENS: z
+    .string()
+    .default(
+      "demo-ops-agent:rein-demo-ops-token,demo-readonly-agent:rein-demo-readonly-token",
+    ),
+  /** Human approver shared secret for approve/deny endpoints. */
+  APPROVER_TOKEN: z.string().default("rein-demo-approver-token"),
   HTTP_PORT: z.coerce.number().int().min(1).max(65_535).default(8_787),
   WEBHOOK_SECRET: z.string().default(""),
 });

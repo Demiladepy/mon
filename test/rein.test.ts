@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { AgentPrincipal } from "../src/agent/registry.js";
+import {
+  fullAccessPrincipal,
+  type AgentPrincipal,
+} from "../src/agent/registry.js";
 import { config } from "../src/config.js";
 import { Ledger } from "../src/ledger/db.js";
 import { MonnifyClient } from "../src/monnify/client.js";
@@ -8,7 +11,9 @@ import { ReinService } from "../src/rein.js";
 
 const ledgers: Ledger[] = [];
 
-function makeService(principal: string | AgentPrincipal = "test-agent"): ReinService {
+function makeService(
+  principal: AgentPrincipal = fullAccessPrincipal("test-agent"),
+): ReinService {
   const ledger = new Ledger(":memory:");
   ledgers.push(ledger);
   return new ReinService(

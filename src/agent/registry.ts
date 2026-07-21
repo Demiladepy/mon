@@ -42,9 +42,9 @@ function isCapability(value: string): value is Capability {
 }
 
 /**
- * Build a permissive principal for an ad-hoc agent id (full capabilities, no
- * extra grant). Used as a safe default in tests and when an id is not in the
- * registry but the caller has explicitly trusted it.
+ * Test-only helper: build an explicit principal with full capabilities.
+ * Production entrypoints MUST use `agentRegistry.require` — never invent a
+ * principal for an unknown agent id.
  */
 export function fullAccessPrincipal(agentId: string): AgentPrincipal {
   return {

@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
-  agentRegistry,
-  fullAccessPrincipal,
-} from "../agent/registry.js";
+  authenticateConfiguredAgent,
+  createCredentialStore,
+} from "../auth/credentials.js";
 import { config } from "../config.js";
 import { Ledger } from "../ledger/db.js";
 import { MonnifyClient } from "../monnify/client.js";
@@ -17,8 +17,22 @@ import {
 } from "./tools.js";
 
 const ledger = new Ledger(config.DATABASE_PATH);
-const principal =
-  agentRegistry.get(config.AGENT_ID) ?? fullAccessPrincipal(config.AGENT_ID);
+const credentials = createCredentialStore({
+  agentTokensRaw: config.AGENT_TOKENS,
+  approverToken: config.APPROVER_TOKEN,
+});
+const auth = authenticateConfiguredAgent(
+  credentials,
+  config.AGENT_ID,
+  config.AGENT_TOKEN,
+);
+if (!auth.ok) {
+  console.error(`Rein MCP refused to start: ${auth.error}`);
+  ledger.close();
+  process.exit(1);
+}
+const principal = auth.principal;
+
 const service = new ReinService(
   ledger,
   new MonnifyClient(config),
@@ -99,7 +113,9 @@ server.registerTool(
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`Rein MCP server ready (DRY_RUN=${config.DRY_RUN})`);
+  console.error(
+    `Rein MCP server ready (agent=${principal.agentId}, DRY_RUN=${config.DRY_RUN})`,
+  );
 }
 
 main().catch((error) => {
