@@ -1,5 +1,4 @@
-import "@fontsource-variable/archivo";
-import "@fontsource-variable/source-sans-3";
+import "@fontsource/varela-round/400.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.js";

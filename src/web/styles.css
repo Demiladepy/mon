@@ -1,8 +1,8 @@
 :root {
   color-scheme: light;
-  font-family: "Source Sans 3 Variable", "Segoe UI", sans-serif;
+  font-family: "Varela Round", "Segoe UI", sans-serif;
   font-synthesis: none;
-  --font-display: "Archivo Variable", "Arial Narrow", sans-serif;
+  --font-display: "Varela Round", "Segoe UI", sans-serif;
   --blue: oklch(51% 0.235 263);
   --blue-dark: oklch(43% 0.225 263);
   --blue-soft: oklch(95% 0.028 263);
@@ -55,8 +55,9 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--ink);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-weight: 400;
 }
 
 button,
@@ -90,7 +91,8 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  letter-spacing: -0.04em;
+  letter-spacing: -0.015em;
+  font-weight: 400;
 }
 
 button:focus {
@@ -147,9 +149,9 @@ select:focus-visible {
   align-items: center;
   gap: 0.625rem;
   font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 720;
-  letter-spacing: -0.045em;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .brand-mark {
@@ -183,8 +185,8 @@ select:focus-visible {
   align-items: center;
   gap: var(--space-xs);
   color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 650;
+  font-size: 0.7rem;
+  font-weight: 400;
 }
 
 .connection-dot {
@@ -214,8 +216,8 @@ select:focus-visible {
   background: var(--ink);
   color: var(--surface);
   font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 400;
 }
 
 .icon-button {
@@ -262,8 +264,8 @@ select:focus-visible {
   border-radius: var(--radius-sm);
   padding: 0 var(--space-sm);
   color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 650;
+  font-size: 0.8125rem;
+  font-weight: 400;
   transition:
     color 140ms var(--ease-out),
     background 140ms var(--ease-out);
@@ -302,26 +304,26 @@ select:focus-visible {
   display: block;
   color: var(--muted);
   font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.095em;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
 .page-header h1 {
   margin-top: var(--space-xs);
-  font-size: clamp(2.35rem, 8vw, 4.4rem);
-  font-weight: 680;
-  line-height: 0.98;
+  font-size: clamp(1.65rem, 4.5vw, 2.35rem);
+  font-weight: 400;
+  line-height: 1.1;
   text-wrap: balance;
 }
 
 .page-header p {
-  max-width: 45rem;
-  margin-top: var(--space-md);
+  max-width: 42rem;
+  margin-top: var(--space-sm);
   color: var(--muted);
-  font-size: 1.05rem;
+  font-size: 0.875rem;
 }
 
 .page-header-action {
@@ -338,8 +340,8 @@ select:focus-visible {
   padding: 0 var(--space-sm);
   background: var(--surface);
   color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 650;
+  font-size: 0.7rem;
+  font-weight: 400;
 }
 
 .button {
@@ -352,8 +354,8 @@ select:focus-visible {
   border: 1px solid transparent;
   border-radius: 0.6rem;
   padding: 0.65rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 400;
   line-height: 1.1;
   transition:
     transform 140ms var(--ease-out),
@@ -435,22 +437,22 @@ select:focus-visible {
 
 .overview-balance > div:first-child > span {
   color: oklch(90% 0.04 263);
-  font-size: 0.9rem;
-  font-weight: 650;
+  font-size: 0.75rem;
+  font-weight: 400;
 }
 
 .overview-balance strong {
   font-family: var(--font-display);
-  font-size: clamp(2.8rem, 12vw, 5.25rem);
+  font-size: clamp(2rem, 7vw, 3.25rem);
   font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  letter-spacing: -0.065em;
-  line-height: 0.96;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 .overview-balance small {
   color: oklch(87% 0.05 263);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .overview-actions {
@@ -492,20 +494,20 @@ select:focus-visible {
 
 .metric-row span {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .metric-row strong {
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  letter-spacing: -0.04em;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .metric-row small {
   color: var(--faint);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
 }
 
 .overview-grid {
@@ -539,13 +541,13 @@ select:focus-visible {
 
 .section-header h2,
 .form-panel-heading h2 {
-  font-size: 1.3rem;
-  font-weight: 680;
+  font-size: 1.05rem;
+  font-weight: 400;
 }
 
 .form-panel-heading h2 {
   margin-top: var(--space-xs);
-  font-size: 1.65rem;
+  font-size: 1.2rem;
 }
 
 .inline-link {
@@ -554,8 +556,8 @@ select:focus-visible {
   align-items: center;
   gap: var(--space-2xs);
   color: var(--blue);
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 400;
 }
 
 .movement-list {
@@ -603,7 +605,7 @@ select:focus-visible {
 .movement-row > div > strong {
   display: block;
   overflow: hidden;
-  font-size: 0.92rem;
+  font-size: 0.8125rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -613,7 +615,7 @@ select:focus-visible {
   overflow: hidden;
   margin-top: 0.12rem;
   color: var(--faint);
-  font-size: 0.76rem;
+  font-size: 0.7rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -637,11 +639,11 @@ select:focus-visible {
 .attention-count {
   display: block;
   font-family: var(--font-display);
-  font-size: 4.5rem;
+  font-size: 2.75rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 630;
-  letter-spacing: -0.07em;
-  line-height: 0.95;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
 .empty-state {
@@ -663,14 +665,14 @@ select:focus-visible {
 }
 
 .empty-state h2 {
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .empty-state p {
-  max-width: 30rem;
+  max-width: 28rem;
   margin: var(--space-xs) 0 var(--space-lg);
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 
 .page-loading {
@@ -732,8 +734,8 @@ select:focus-visible {
   border: 1px solid transparent;
   border-radius: 100rem;
   padding: 0.12rem 0.55rem;
-  font-size: 0.7rem;
-  font-weight: 720;
+  font-size: 0.65rem;
+  font-weight: 400;
   text-transform: capitalize;
   white-space: nowrap;
 }
@@ -780,8 +782,8 @@ select:focus-visible {
   display: grid;
   gap: 0.4rem;
   color: var(--ink-2);
-  font-size: 0.875rem;
-  font-weight: 680;
+  font-size: 0.75rem;
+  font-weight: 400;
 }
 
 .product-form input,
@@ -826,7 +828,7 @@ select:focus-visible {
 .form-footer p {
   max-width: 38rem;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .form-message,
@@ -837,7 +839,7 @@ select:focus-visible {
   padding: var(--space-sm);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
 }
 
 .form-message svg,
@@ -900,12 +902,12 @@ select:focus-visible {
 .account-card > strong {
   margin-top: var(--space-xs);
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 0.95rem;
 }
 
 .account-card > span {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
 }
 
 .account-card dl,
@@ -923,7 +925,7 @@ select:focus-visible {
   display: flex;
   justify-content: space-between;
   gap: var(--space-md);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 
 .account-card dt,
@@ -935,12 +937,12 @@ select:focus-visible {
 .approval-details dd {
   margin: 0;
   text-align: right;
-  font-weight: 620;
+  font-weight: 400;
 }
 
 .account-card > small {
   color: var(--faint);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 .data-table-wrap {
@@ -953,7 +955,7 @@ select:focus-visible {
   width: 100%;
   min-width: 48rem;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
 }
 
 .data-table th,
@@ -967,8 +969,8 @@ select:focus-visible {
 .data-table th {
   background: var(--canvas);
   color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 720;
+  font-size: 0.65rem;
+  font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -994,7 +996,7 @@ select:focus-visible {
 .data-table .numeric {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-weight: 650;
+  font-weight: 400;
 }
 
 .amount-positive {
@@ -1005,7 +1007,7 @@ select:focus-visible {
   max-width: 12rem;
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1040,10 +1042,10 @@ select:focus-visible {
 
 .approval-card > header strong {
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: 1.65rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  letter-spacing: -0.055em;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 .policy-explanation {
@@ -1062,7 +1064,7 @@ select:focus-visible {
 
 .policy-explanation p {
   margin-top: var(--space-2xs);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 
 .approval-card > footer {
@@ -1087,8 +1089,8 @@ select:focus-visible {
   padding: 0 var(--space-sm);
   background: var(--surface);
   color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 650;
+  font-size: 0.72rem;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -1133,13 +1135,13 @@ select:focus-visible {
 }
 
 .audit-copy strong {
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 
 .audit-copy span,
 .audit-row time {
   color: var(--faint);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 .audit-row time {
@@ -1165,7 +1167,7 @@ select:focus-visible {
 .policy-banner p {
   max-width: 50rem;
   margin-top: var(--space-2xs);
-  font-size: 0.88rem;
+  font-size: 0.78rem;
 }
 
 .rule-grid {
@@ -1204,15 +1206,15 @@ select:focus-visible {
 
 .rule-card strong {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.02em;
 }
 
 .rule-card p {
   margin-top: var(--space-2xs);
   color: var(--faint);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 
 .beneficiary-list {
@@ -1248,7 +1250,7 @@ select:focus-visible {
 .beneficiary-list small {
   margin-top: 0.1rem;
   color: var(--faint);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
 }
 
 .sidebar-trust {
@@ -1277,13 +1279,13 @@ select:focus-visible {
 }
 
 .sidebar-trust strong {
-  font-size: 0.76rem;
+  font-size: 0.7rem;
 }
 
 .sidebar-trust small {
   color: var(--success);
-  font-size: 0.68rem;
-  font-weight: 650;
+  font-size: 0.65rem;
+  font-weight: 400;
 }
 
 .spin {
