@@ -1,0 +1,16 @@
+{
+  "maxPerTxnKobo": 10000000,
+  "maxPerDayKobo": 25000000,
+  "approvalThresholdKobo": 5000000,
+  "velocity": {
+    "maxPayouts": 5,
+    "windowMinutes": 60
+  },
+  "beneficiaryAllowlist": [
+    {
+      "accountNumber": "0123456789",
+      "bankCode": "058",
+      "name": "Musa Ibrahim"
+    }
+  ]
+}

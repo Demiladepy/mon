@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta
+      name="description"
+      content="Rein runs cash operations on Monnify with deterministic controls between the agent and the money."
+    />
+    <meta name="theme-color" content="#f7f8fc" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <title>Rein · Agent cash operations</title>
+    <script>
+      // Kill leftover localhost service workers/caches from older apps (e.g. V2V).
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          for (const reg of regs) void reg.unregister();
+        });
+      }
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          for (const key of keys) void caches.delete(key);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div id="root"></div>
+    <script type="module" src="/src/web/main.tsx"></script>
+  </body>
+</html>
