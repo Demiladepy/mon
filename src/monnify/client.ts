@@ -137,7 +137,10 @@ export class MonnifyClient {
 
   async walletBalance() {
     if (this.settings.DRY_RUN) {
-      return mockWalletBalance(this.settings.MONNIFY_SOURCE_ACCOUNT);
+      return mockWalletBalance(
+        this.settings.MONNIFY_SOURCE_ACCOUNT,
+        this.settings.DRY_RUN_WALLET_BALANCE_KOBO,
+      );
     }
     const query = new URLSearchParams({
       accountNumber: this.settings.MONNIFY_SOURCE_ACCOUNT,

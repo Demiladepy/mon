@@ -490,8 +490,29 @@ export class ReinService {
       collections: this.ledger.listCollections(12),
       approvals: this.ledger.listPendingApprovals(12),
       accounts: this.ledger.listReservedAccounts(12),
+      payouts: this.ledger.listPayouts(12),
       activity: this.ledger.listAudit(30),
     };
+  }
+
+  collections(limit = 50): unknown[] {
+    return this.ledger.listCollections(limit);
+  }
+
+  reservedAccounts(limit = 50): unknown[] {
+    return this.ledger.listReservedAccounts(limit);
+  }
+
+  payouts(limit = 50): unknown[] {
+    return this.ledger.listPayouts(limit);
+  }
+
+  pendingApprovals(limit = 50): unknown[] {
+    return this.ledger.listPendingApprovals(limit);
+  }
+
+  policySnapshot(): Policy {
+    return structuredClone(this.policy);
   }
 
   auditTrail(limit = 50): unknown[] {

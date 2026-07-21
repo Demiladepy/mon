@@ -49,7 +49,7 @@ npm run web
 
 Open <http://localhost:3000>. On WSL/Linux, use `cp .env.example .env`.
 
-The dry-run web app seeds one customer collection, one successful supplier payout, one denied injection attempt, and one payout waiting for approval. Use the dashboard to create another reserved account, make a payout, or approve the held payment.
+The web app starts with an empty ledger and never inserts presentation data automatically. Create collection accounts and payouts through their dedicated pages; each view renders only persisted API records. `DRY_RUN_WALLET_BALANCE_KOBO` can optionally provide an explicit simulated wallet balance for offline demos.
 
 For the narrated terminal demo:
 

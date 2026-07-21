@@ -31,6 +31,12 @@ await app.register(rawBody, {
 });
 
 app.get("/api/dashboard", async () => service.dashboard());
+app.get("/api/collections", async () => service.collections());
+app.get("/api/accounts", async () => service.reservedAccounts());
+app.get("/api/payouts", async () => service.payouts());
+app.get("/api/approvals", async () => service.pendingApprovals());
+app.get("/api/activity", async () => service.auditTrail(100));
+app.get("/api/policy", async () => service.policySnapshot());
 
 app.post("/api/payouts", async (request, reply) => {
   const result = await service.payout(request.body);
@@ -96,57 +102,6 @@ app.post(
   },
 );
 
-async function seedDemo(): Promise<void> {
-  if (!config.DRY_RUN) return;
-
-  await service.createReservedAccount({
-    accountReference: "bakery-customer-001",
-    accountName: "Aderonke Stores Collection",
-    customerName: "Aderonke Stores",
-    customerEmail: "accounts@aderonke.example",
-    nin: "12345678901",
-    idempotencyKey: "seed-reserved-account-001",
-  });
-  service.recordCollection(
-    {
-      transactionReference: "MNFY-SEED-COLLECTION-001",
-      amountKobo: 12_750_000,
-      accountReference: "bakery-customer-001",
-      customerName: "Aderonke Stores",
-      status: "SUCCESS",
-      paidAt: new Date().toISOString(),
-    },
-    { source: "deterministic-demo-seed" },
-  );
-  await service.payout({
-    amountKobo: 850_000,
-    beneficiaryAccount: "0123456789",
-    beneficiaryBankCode: "058",
-    expectedBeneficiaryName: "Musa Ibrahim",
-    category: "supplier",
-    idempotencyKey: "seed-legit-payout-001",
-    reason: "Flour delivery · INV-2841",
-  });
-  await service.payout({
-    amountKobo: 5_500_000,
-    beneficiaryAccount: "0123456789",
-    beneficiaryBankCode: "058",
-    expectedBeneficiaryName: "Musa Ibrahim",
-    category: "supplier",
-    idempotencyKey: "seed-approval-payout-001",
-    reason: "Bulk flour order · INV-2856",
-  });
-  await service.payout({
-    amountKobo: 50_000_000,
-    beneficiaryAccount: "9911223344",
-    beneficiaryBankCode: "044",
-    expectedBeneficiaryName: "Admin Approved Supplier",
-    category: "supplier",
-    idempotencyKey: "seed-injection-payout-001",
-    reason: "Untrusted delivery-note instruction",
-  });
-}
-
 app.addHook("onSend", async (request, reply, payload) => {
   if (
     request.method === "GET" &&
@@ -157,7 +112,6 @@ app.addHook("onSend", async (request, reply, payload) => {
     reply.header("Cache-Control", "no-store, no-cache, must-revalidate");
     reply.header("Pragma", "no-cache");
     reply.header("Expires", "0");
-    reply.header("Clear-Site-Data", '"cache"');
   }
   return payload;
 });
@@ -166,7 +120,6 @@ app.get("/api/identity", async () => ({
   product: "Rein",
   tagline:
     "AI cash operations on Monnify — collections, verified payouts, deterministic control.",
-  not: ["V2V", "Voice to Value", "Aethana", "Groq"],
 }));
 
 const webRoot = path.resolve(process.cwd(), "dist-web");
@@ -185,7 +138,6 @@ if (fs.existsSync(webRoot)) {
 }
 
 async function main(): Promise<void> {
-  await seedDemo();
   await app.listen({ host: "0.0.0.0", port: config.HTTP_PORT });
   console.log(`Rein web app ready at http://localhost:${config.HTTP_PORT}`);
 }

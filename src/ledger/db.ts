@@ -380,6 +380,42 @@ export class Ledger {
       });
   }
 
+  listPayouts(limit = 50): unknown[] {
+    return this.db
+      .prepare(
+        `SELECT i.idempotency_key, i.amount_kobo, i.payload_json,
+                d.effect, d.reasons_json, d.matched_rules_json,
+                e.status, e.provider_reference, e.result_json, e.created_at
+         FROM intents i
+         JOIN decisions d ON d.idempotency_key = i.idempotency_key
+         JOIN executions e ON e.idempotency_key = i.idempotency_key
+         WHERE i.action = 'PAYOUT'
+         ORDER BY e.id DESC LIMIT ?`,
+      )
+      .all(limit)
+      .map((row) => {
+        const typed = row as {
+          payload_json: string;
+          reasons_json: string;
+          matched_rules_json: string;
+          result_json: string | null;
+          [key: string]: unknown;
+        };
+        return {
+          idempotencyKey: typed.idempotency_key,
+          amountKobo: typed.amount_kobo,
+          effect: typed.effect,
+          status: typed.status,
+          providerReference: typed.provider_reference,
+          createdAt: typed.created_at,
+          intent: JSON.parse(typed.payload_json),
+          reasons: JSON.parse(typed.reasons_json),
+          matchedRules: JSON.parse(typed.matched_rules_json),
+          result: typed.result_json ? JSON.parse(typed.result_json) : null,
+        };
+      });
+  }
+
   updateApprovalOutcome(
     idempotencyKey: string,
     status: "SUCCESS" | "DENIED" | "PROVIDER_ERROR",

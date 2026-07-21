@@ -64,15 +64,18 @@ export function mockTransfer(request: TransferRequest) {
   } as const;
 }
 
-export function mockWalletBalance(accountNumber: string) {
+export function mockWalletBalance(
+  accountNumber: string,
+  availableBalanceKobo = 0,
+) {
   return {
     requestSuccessful: true,
     responseMessage: "success",
     responseCode: "0",
     responseBody: {
-      availableBalanceKobo: 24_500_000,
-      ledgerBalanceKobo: 25_000_000,
-      accountNumber: accountNumber || "9999999999",
+      availableBalanceKobo,
+      ledgerBalanceKobo: availableBalanceKobo,
+      accountNumber: accountNumber || undefined,
       currency: "NGN",
     },
   } as const;

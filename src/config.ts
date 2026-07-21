@@ -9,6 +9,11 @@ const booleanFromEnv = z
 
 const envSchema = z.object({
   DRY_RUN: booleanFromEnv,
+  DRY_RUN_WALLET_BALANCE_KOBO: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .default(0),
   DATABASE_PATH: z.string().default("./data/rein.db"),
   MONNIFY_BASE_URL: z.string().url().default("https://sandbox.monnify.com"),
   MONNIFY_API_KEY: z.string().default(""),
