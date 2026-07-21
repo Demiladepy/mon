@@ -39,7 +39,8 @@ Demo Agent ──typed intent──► Rein MCP Server ─► Policy     │
 ### Components
 
 1. Real MCP server using `@modelcontextprotocol/sdk`.
-2. Pure deterministic policy evaluator over declarative rules.
+2. Agent permission layer: registered principals with least-privilege capabilities and scoped grants (`agent/registry.ts`, `agent/agents.default.json`). Capabilities gate whether an action may be attempted at all; grants can only narrow the global policy.
+3. Pure deterministic policy evaluator over declarative rules.
 3. Thin Monnify sandbox adapter with `DRY_RUN`.
 4. Append-only ledger of intents, decisions, idempotency, results, and Monnify references.
 5. Approval gate and polished cash-operations dashboard for collections, payouts, policy decisions, and `PENDING_APPROVAL` actions.
@@ -67,6 +68,8 @@ rein/
     policy/engine.ts
     policy/rules.ts
     policy/rules.default.json
+    agent/registry.ts
+    agent/agents.default.json
     monnify/client.ts
     monnify/mock.ts
     ledger/db.ts

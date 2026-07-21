@@ -99,4 +99,38 @@ describe("deterministic policy engine", () => {
     expect(namesMatch("Ibrahim, Musa", "MUSA IBRAHIM")).toBe(true);
     expect(namesMatch("Musa Ibrahim", "Adaeze Okafor")).toBe(false);
   });
+
+  it("enforces a tighter per-agent grant cap than the global policy", () => {
+    const overGrantAmount = 900_000;
+    const decision = evaluate(
+      { ...intent, amountKobo: overGrantAmount },
+      context,
+      defaultPolicy,
+      { maxPerTxnKobo: 500_000 },
+    );
+    expect(decision.effect).toBe("DENY");
+    expect(decision.matchedRules).toContain("PER_TRANSACTION_CAP");
+  });
+
+  it("denies a category outside the agent's scoped grant", () => {
+    const decision = evaluate(
+      { ...intent, category: "gambling" },
+      context,
+      defaultPolicy,
+      { allowedCategories: ["supplier", "utilities"] },
+    );
+    expect(decision.effect).toBe("DENY");
+    expect(decision.matchedRules).toContain("AGENT_CATEGORY_SCOPE");
+  });
+
+  it("ignores grant fields that would widen authority", () => {
+    const decision = evaluate(
+      { ...intent, amountKobo: 50_000_000 },
+      context,
+      defaultPolicy,
+      { maxPerTxnKobo: 99_999_999_999 },
+    );
+    expect(decision.effect).toBe("DENY");
+    expect(decision.matchedRules).toContain("PER_TRANSACTION_CAP");
+  });
 });

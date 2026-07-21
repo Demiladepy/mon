@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { AgentPrincipal } from "../src/agent/registry.js";
 import { config } from "../src/config.js";
 import { Ledger } from "../src/ledger/db.js";
 import { MonnifyClient } from "../src/monnify/client.js";
@@ -7,14 +8,14 @@ import { ReinService } from "../src/rein.js";
 
 const ledgers: Ledger[] = [];
 
-function makeService(): ReinService {
+function makeService(principal: string | AgentPrincipal = "test-agent"): ReinService {
   const ledger = new Ledger(":memory:");
   ledgers.push(ledger);
   return new ReinService(
     ledger,
     new MonnifyClient({ ...config, DRY_RUN: true }),
     defaultPolicy,
-    "test-agent",
+    principal,
   );
 }
 
@@ -97,6 +98,67 @@ describe("Rein payout service", () => {
     expect(first).toMatchObject({ ok: true, status: "SUCCESS" });
     expect(replay).toMatchObject({ ok: true, replayed: true });
     expect(JSON.stringify(service.auditTrail())).not.toContain(request.nin);
+  });
+
+  it("denies a payout when the agent lacks the capability", async () => {
+    const readonly: AgentPrincipal = {
+      agentId: "readonly-agent",
+      label: "Reconciliation Agent",
+      capabilities: ["verify.customer", "wallet.balance", "policy.explain"],
+      grant: {},
+    };
+    const service = makeService(readonly);
+    const result = await service.payout({
+      ...payout,
+      idempotencyKey: "capability-denied-001",
+    });
+    expect(result).toMatchObject({ ok: true, status: "DENIED" });
+    if (result.ok) {
+      expect(result.decision.matchedRules).toContain("CAPABILITY");
+    }
+    expect(
+      service
+        .auditTrail()
+        .some(
+          (row) =>
+            (row as { event_type?: string }).event_type ===
+            "CAPABILITY_DENIED",
+        ),
+    ).toBe(true);
+    // The capability check must short-circuit before any intent is claimed.
+    expect(
+      service
+        .auditTrail()
+        .some(
+          (row) =>
+            (row as { event_type?: string }).event_type === "INTENT_RECEIVED",
+        ),
+    ).toBe(false);
+  });
+
+  it("keeps a scoped grant tighter than the global policy", async () => {
+    const scoped: AgentPrincipal = {
+      agentId: "scoped-agent",
+      label: "Scoped Agent",
+      capabilities: [
+        "payout.initiate",
+        "verify.customer",
+        "wallet.balance",
+        "policy.explain",
+      ],
+      grant: { maxPerTxnKobo: 500_000 },
+    };
+    const service = makeService(scoped);
+    const result = await service.payout({
+      ...payout,
+      amountKobo: 900_000,
+      idempotencyKey: "scoped-cap-001",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.status).toBe("DENIED");
+      expect(result.decision.matchedRules).toContain("PER_TRANSACTION_CAP");
+    }
   });
 
   it("executes a held payout only after human approval", async () => {

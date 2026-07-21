@@ -1,0 +1,39 @@
+{
+  "agents": [
+    {
+      "agentId": "demo-ops-agent",
+      "label": "Cash Operations Agent",
+      "description": "Runs day-to-day cash ops: collections, verification, and supplier payouts within a scoped budget.",
+      "capabilities": [
+        "payout.initiate",
+        "collect.create_virtual_account",
+        "verify.customer",
+        "wallet.balance",
+        "policy.explain"
+      ],
+      "grant": {
+        "maxPerTxnKobo": 8000000,
+        "maxPerDayKobo": 15000000,
+        "approvalThresholdKobo": 5000000,
+        "allowedCategories": [
+          "supplier",
+          "utilities",
+          "payroll",
+          "rent",
+          "logistics"
+        ]
+      }
+    },
+    {
+      "agentId": "demo-readonly-agent",
+      "label": "Reconciliation Agent",
+      "description": "Read-only assistant that can verify accounts and inspect balances but can never move money.",
+      "capabilities": [
+        "verify.customer",
+        "wallet.balance",
+        "policy.explain"
+      ],
+      "grant": {}
+    }
+  ]
+}

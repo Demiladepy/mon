@@ -1,3 +1,4 @@
+import type { AgentGrant } from "../agent/registry.js";
 import type { PaymentIntent } from "../mcp/tools.js";
 import type { Policy } from "./rules.js";
 
@@ -39,10 +40,15 @@ export function namesMatch(expected: string, resolved: string): boolean {
   return overlap / Math.max(expectedTokens.size, resolvedTokens.size) >= 0.67;
 }
 
+function minDefined(a: number, b: number | undefined): number {
+  return b === undefined ? a : Math.min(a, b);
+}
+
 export function evaluate(
   intent: PaymentIntent,
   context: AgentContext,
   policy: Policy,
+  grant: AgentGrant = {},
 ): Decision {
   const reasons: string[] = [];
   const matchedRules: string[] = [];
@@ -67,18 +73,38 @@ export function evaluate(
     };
   }
 
+  // The effective ceiling is the tighter of the global policy and this agent's
+  // scoped grant. A grant can only ever narrow authority, never widen it.
+  const maxPerTxnKobo = minDefined(policy.maxPerTxnKobo, grant.maxPerTxnKobo);
+  const maxPerDayKobo = minDefined(policy.maxPerDayKobo, grant.maxPerDayKobo);
+  const approvalThresholdKobo = minDefined(
+    policy.approvalThresholdKobo,
+    grant.approvalThresholdKobo,
+  );
+
   const amountKobo = intent.amountKobo!;
-  if (amountKobo > policy.maxPerTxnKobo) {
+  if (amountKobo > maxPerTxnKobo) {
     deny(
       "PER_TRANSACTION_CAP",
-      `Amount ${amountKobo} kobo exceeds per-transaction cap ${policy.maxPerTxnKobo} kobo.`,
+      `Amount ${amountKobo} kobo exceeds per-transaction cap ${maxPerTxnKobo} kobo.`,
     );
   }
 
-  if (context.executedTodayKobo + amountKobo > policy.maxPerDayKobo) {
+  if (context.executedTodayKobo + amountKobo > maxPerDayKobo) {
     deny(
       "DAILY_AGGREGATE_CAP",
-      `Daily spend would exceed ${policy.maxPerDayKobo} kobo.`,
+      `Daily spend would exceed ${maxPerDayKobo} kobo.`,
+    );
+  }
+
+  if (
+    grant.allowedCategories &&
+    grant.allowedCategories.length > 0 &&
+    (!intent.category || !grant.allowedCategories.includes(intent.category))
+  ) {
+    deny(
+      "AGENT_CATEGORY_SCOPE",
+      `Category "${intent.category ?? "unspecified"}" is outside this agent's allowed categories.`,
     );
   }
 
@@ -114,10 +140,10 @@ export function evaluate(
     );
   }
 
-  if (amountKobo >= policy.approvalThresholdKobo) {
+  if (amountKobo >= approvalThresholdKobo) {
     approve(
       "APPROVAL_THRESHOLD",
-      `Amount meets the ${policy.approvalThresholdKobo} kobo approval threshold.`,
+      `Amount meets the ${approvalThresholdKobo} kobo approval threshold.`,
     );
   }
 

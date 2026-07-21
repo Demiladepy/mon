@@ -1,5 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  agentRegistry,
+  fullAccessPrincipal,
+} from "../agent/registry.js";
 import { config } from "../config.js";
 import { Ledger } from "../ledger/db.js";
 import { MonnifyClient } from "../monnify/client.js";
@@ -13,11 +17,13 @@ import {
 } from "./tools.js";
 
 const ledger = new Ledger(config.DATABASE_PATH);
+const principal =
+  agentRegistry.get(config.AGENT_ID) ?? fullAccessPrincipal(config.AGENT_ID);
 const service = new ReinService(
   ledger,
   new MonnifyClient(config),
   defaultPolicy,
-  config.AGENT_ID,
+  principal,
 );
 
 function toolResult(value: unknown) {
@@ -78,6 +84,16 @@ server.registerTool(
     inputSchema: payoutToolInput,
   },
   async (input) => toolResult(await service.explain(input)),
+);
+
+server.registerTool(
+  "agent.whoami",
+  {
+    description:
+      "Return this agent's identity, granted capabilities, and scoped spending limits. Read-only.",
+    inputSchema: {},
+  },
+  async () => toolResult(service.identity()),
 );
 
 async function main(): Promise<void> {

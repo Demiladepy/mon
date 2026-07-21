@@ -3,6 +3,10 @@ import path from "node:path";
 import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import rawBody from "fastify-raw-body";
+import {
+  agentRegistry,
+  fullAccessPrincipal,
+} from "../agent/registry.js";
 import { config } from "../config.js";
 import { Ledger } from "../ledger/db.js";
 import { MonnifyClient } from "../monnify/client.js";
@@ -15,12 +19,9 @@ import {
 
 const ledger = new Ledger(config.DATABASE_PATH);
 const monnify = new MonnifyClient(config);
-const service = new ReinService(
-  ledger,
-  monnify,
-  defaultPolicy,
-  config.AGENT_ID,
-);
+const principal =
+  agentRegistry.get(config.AGENT_ID) ?? fullAccessPrincipal(config.AGENT_ID);
+const service = new ReinService(ledger, monnify, defaultPolicy, principal);
 const app = Fastify({ logger: false });
 
 await app.register(rawBody, {
@@ -37,6 +38,8 @@ app.get("/api/payouts", async () => service.payouts());
 app.get("/api/approvals", async () => service.pendingApprovals());
 app.get("/api/activity", async () => service.auditTrail(100));
 app.get("/api/policy", async () => service.policySnapshot());
+app.get("/api/agent", async () => service.identity());
+app.get("/api/agents", async () => agentRegistry.list());
 
 app.post("/api/payouts", async (request, reply) => {
   const result = await service.payout(request.body);

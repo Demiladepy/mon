@@ -1,4 +1,9 @@
 import { ZodError } from "zod";
+import {
+  fullAccessPrincipal,
+  type AgentPrincipal,
+  type Capability,
+} from "./agent/registry.js";
 import { appendAudit } from "./ledger/audit.js";
 import {
   Ledger,
@@ -54,14 +59,96 @@ function formatStoredOutcome(outcome: StoredOutcome): ReinResponse {
 }
 
 export class ReinService {
+  private readonly principal: AgentPrincipal;
+  private readonly agentId: string;
+
   constructor(
     private readonly ledger: Ledger,
     private readonly monnify: MonnifyClient,
     private readonly policy: Policy,
-    private readonly agentId: string,
-  ) {}
+    principal: string | AgentPrincipal,
+  ) {
+    this.principal =
+      typeof principal === "string"
+        ? fullAccessPrincipal(principal)
+        : principal;
+    this.agentId = this.principal.agentId;
+  }
+
+  /**
+   * Trust-boundary check: does this principal even have standing to attempt the
+   * action? Runs before any money-path logic, so a missing capability short-
+   * circuits regardless of what the model was tricked into requesting.
+   */
+  private denyCapability(
+    capability: Capability,
+    idempotencyKey?: string,
+  ): ReinResponse | null {
+    if (this.principal.capabilities.includes(capability)) return null;
+    appendAudit(
+      this.ledger,
+      "CAPABILITY_DENIED",
+      { capability, agentId: this.agentId },
+      this.agentId,
+      idempotencyKey,
+    );
+    return {
+      ok: true,
+      replayed: false,
+      decision: {
+        effect: "DENY",
+        reasons: [
+          `Agent "${this.principal.label}" lacks the "${capability}" capability.`,
+        ],
+        matchedRules: ["CAPABILITY"],
+      },
+      status: "DENIED",
+    };
+  }
+
+  private assertCapability(capability: Capability): void {
+    if (this.principal.capabilities.includes(capability)) return;
+    appendAudit(
+      this.ledger,
+      "CAPABILITY_DENIED",
+      { capability, agentId: this.agentId },
+      this.agentId,
+    );
+    throw new Error(
+      `Agent "${this.principal.label}" lacks the "${capability}" capability.`,
+    );
+  }
+
+  identity(): {
+    agentId: string;
+    label: string;
+    description?: string;
+    capabilities: Capability[];
+    grant: AgentPrincipal["grant"];
+  } {
+    return {
+      agentId: this.principal.agentId,
+      label: this.principal.label,
+      description: this.principal.description,
+      capabilities: [...this.principal.capabilities],
+      grant: structuredClone(this.principal.grant),
+    };
+  }
 
   async payout(rawInput: unknown): Promise<ReinResponse> {
+    const idempotencyKeyForCap =
+      rawInput &&
+      typeof rawInput === "object" &&
+      "idempotencyKey" in rawInput &&
+      typeof rawInput.idempotencyKey === "string"
+        ? rawInput.idempotencyKey
+        : undefined;
+    const capabilityDenied = this.denyCapability(
+      "payout.initiate",
+      idempotencyKeyForCap,
+    );
+    if (capabilityDenied) return capabilityDenied;
+
     if (hasPolicyTamperFields(rawInput)) {
       const idempotencyKey =
         rawInput &&
@@ -149,7 +236,7 @@ export class ReinService {
         windowStart,
       ),
     };
-    const decision = evaluate(intent, context, this.policy);
+    const decision = evaluate(intent, context, this.policy, this.principal.grant);
 
     if (decision.effect === "DENY") {
       this.ledger.complete(intent, decision, "DENIED");
@@ -245,10 +332,24 @@ export class ReinService {
   }
 
   async walletBalance(): Promise<unknown> {
+    this.assertCapability("wallet.balance");
     return this.monnify.walletBalance();
   }
 
   async createReservedAccount(rawInput: unknown): Promise<ReinResponse> {
+    const idempotencyKeyForCap =
+      rawInput &&
+      typeof rawInput === "object" &&
+      "idempotencyKey" in rawInput &&
+      typeof rawInput.idempotencyKey === "string"
+        ? rawInput.idempotencyKey
+        : undefined;
+    const capabilityDenied = this.denyCapability(
+      "collect.create_virtual_account",
+      idempotencyKeyForCap,
+    );
+    if (capabilityDenied) return capabilityDenied;
+
     let input: ReservedAccountInput;
     try {
       input = reservedAccountSchema.parse(rawInput);
@@ -343,6 +444,7 @@ export class ReinService {
     beneficiaryBankCode: string;
     expectedBeneficiaryName: string;
   }): Promise<unknown> {
+    this.assertCapability("verify.customer");
     const inquiry = await this.monnify.nameInquiry(
       input.beneficiaryAccount,
       input.beneficiaryBankCode,
@@ -357,6 +459,7 @@ export class ReinService {
   }
 
   async explain(rawInput: unknown): Promise<Decision> {
+    this.assertCapability("policy.explain");
     const intent = paymentIntentSchema.parse({
       ...(rawInput as object),
       action: "PAYOUT",
@@ -380,6 +483,7 @@ export class ReinService {
         ),
       },
       this.policy,
+      this.principal.grant,
     );
   }
 

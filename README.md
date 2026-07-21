@@ -7,12 +7,13 @@ Rein gives a Nigerian business one operating view for customer collections, supp
 ## What works
 
 - End-to-end cash path: reserved account → signed collection webhook → typed agent intent → name inquiry → deterministic policy → transfer → audit
+- Agent permission system: each agent is a registered principal with least-privilege **capabilities** and a **scoped grant** that can only narrow the global policy, never widen it
 - Polished responsive operations dashboard with collections, cash flow, approvals, activity, and live actions
 - Deterministic `DRY_RUN=true` adapter, including matching and mismatching account names
 - Per-transaction and daily caps, beneficiary allowlist, mandatory name match, velocity limit, approval threshold
 - SQLite ledger-backed spend calculations and idempotent replay
 - Strict Zod boundary that rejects and audits attempted policy override fields
-- MCP tools: `collect.create_virtual_account`, `payout.initiate`, `verify.customer`, `wallet.balance`, and `policy.explain`
+- MCP tools: `collect.create_virtual_account`, `payout.initiate`, `verify.customer`, `wallet.balance`, `policy.explain`, and `agent.whoami`
 - Human approval execution that repeats name inquiry before releasing a held payout
 - Raw-body HMAC-SHA256 verification for Monnify collection webhooks
 - Scripted offline demo and optional Anthropic-powered agent loop
@@ -28,6 +29,15 @@ Agent / MCP client ──typed intent──► Rein policy engine     │
                                           ▼                 ▼
                                   Monnify payout ─────► operations UI
 ```
+
+### Agent permission model
+
+An agent never has ambient authority. It acts as a **principal** defined in `src/agent/agents.default.json` and resolved through `src/agent/registry.ts`. Two layers gate every request, in order:
+
+1. **Capability check (can it even ask?)** — a least-privilege allowlist of actions the principal may attempt (e.g. `payout.initiate`). A missing capability short-circuits *before* any intent is claimed or money-path logic runs, and is audited as `CAPABILITY_DENIED`. The demo's `demo-readonly-agent` can verify accounts and read balances but can never pay.
+2. **Scoped grant (how much, to whom?)** — per-principal limits (`maxPerTxnKobo`, `maxPerDayKobo`, `approvalThresholdKobo`, `allowedCategories`) that the deterministic engine intersects with the global policy. The engine always takes the *tighter* of the two, so a grant can only reduce authority. A grant that tries to widen a cap is ignored.
+
+The global policy in `src/policy/rules.default.json` is the ceiling for all agents; a principal's grant is its own, lower ceiling.
 
 Every Monnify request is isolated in `src/monnify/client.ts`. Current live paths were checked against Monnify's July 2026 documentation:
 
@@ -61,12 +71,14 @@ npm run demo
 
 `DRY_RUN` defaults to `true`; no credentials or network are needed. The demo runs:
 
-1. A dedicated Monnify collection account is created.
-2. A ₦127,500 customer payment is reconciled from a webhook fixture.
-3. An allowlisted ₦8,500 supplier payout succeeds after name inquiry.
-4. A prompt-injected override is rejected, and its typed payout is denied.
-5. Legitimate work still succeeds in the same session.
-6. A larger valid payout waits for a person, then executes after approval and a fresh name inquiry.
+1. The ops agent prints its principal identity, capabilities, and scoped grant.
+2. A dedicated Monnify collection account is created.
+3. A ₦127,500 customer payment is reconciled from a webhook fixture.
+4. An allowlisted ₦8,500 supplier payout succeeds after name inquiry.
+5. A prompt-injected override is rejected, and its typed payout is denied.
+6. Legitimate work still succeeds in the same session.
+7. A read-only agent is refused a payout on the capability check, before any money-path logic runs.
+8. A larger valid payout waits for a person, then executes after approval and a fresh name inquiry.
 
 Re-running the demo returns the original stored outcomes rather than sending duplicates.
 
@@ -117,6 +129,8 @@ Use sandbox credentials only. Rein converts integer kobo to Monnify's naira requ
 
 ## Security model
 
+- Agents are principals with least-privilege capabilities; an action the principal lacks is denied before any intent is claimed.
+- A per-agent grant can only narrow the global policy. The engine intersects the two and takes the tighter ceiling, so a grant can never escalate authority.
 - Tool arguments are untrusted. Strict Zod schemas reject unknown fields such as `adminOverride` or `maxPerTxnKobo`.
 - Policy is server-side and cannot be changed by a tool call.
 - `reason` is audit-only. It has no effect on policy.
