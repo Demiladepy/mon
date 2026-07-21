@@ -47,7 +47,9 @@ copy .env.example .env
 npm run web
 ```
 
-Open <http://localhost:3000>. On WSL/Linux, use `cp .env.example .env`.
+Open <http://localhost:8787>. On WSL/Linux, use `cp .env.example .env`.
+
+Rein uses port **8787** permanently. Port 3000 is not used by this project.
 
 The web app starts with an empty ledger and never inserts presentation data automatically. Create collection accounts and payouts through their dedicated pages; each view renders only persisted API records. `DRY_RUN_WALLET_BALANCE_KOBO` can optionally provide an explicit simulated wallet balance for offline demos.
 

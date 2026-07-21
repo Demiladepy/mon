@@ -25,7 +25,7 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().default(""),
   ANTHROPIC_MODEL: z.string().default("claude-sonnet-4-20250514"),
   AGENT_ID: z.string().default("demo-ops-agent"),
-  HTTP_PORT: z.coerce.number().int().min(1).max(65_535).default(3_000),
+  HTTP_PORT: z.coerce.number().int().min(1).max(65_535).default(8_787),
   WEBHOOK_SECRET: z.string().default(""),
 });
 
